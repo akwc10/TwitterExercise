@@ -6,7 +6,16 @@ class TwitterExerciseTest {
 
     @Test
     fun `test stuff`() {
-
+        twitter.postTweet(1, 2)
+        twitter.postTweet(1, 2)
+        twitter.postTweet(1, 3)
+        twitter.postTweet(2, 2)
+        twitter.postTweet(2, 4)
+        twitter.follow(1, 2)
+//        twitter.follow(2, 1)
+        twitter.follow(3, 2)
+//        twitter.unfollow(1, 2)
+        twitter.getNewsFeed(2)
     }
 
     @Test

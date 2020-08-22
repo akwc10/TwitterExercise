@@ -1,4 +1,6 @@
 import io.reactivex.Observable
+import java.time.Instant
+
 
 /**
  * Design a simplified version of Twitter where users can post tweets,
@@ -17,24 +19,85 @@ import io.reactivex.Observable
  * unfollow(followerId, followeeId): Follower unfollow a followee.
  */
 
+data class Tweet(val tweetId: TweetId, val userId: UserId, val now: Instant = Instant.now())
+
 class TwitterExercise : ITwitterExercise {
-//    val tweetsUsersCanSee = mutableListOf<Pair<TweetId, MutableList<UserId>>>()
+    //TODO - Handle duplicates?
+    val tweetIdObservable = Observable.create<List<TweetId>> { emitter ->
+        emitter.onNext(emptyList())
+    }
+    val twitterRepository = TwitterRepository()
+
 
     override fun postTweet(userId: UserId, tweetId: TweetId) {
-//        tweetsUsersCanSee.add(Pair(1, mutableListOf(2)))
-        println("TODO postTweet - userId: $userId, tweetId: $tweetId")
+        twitterRepository.postTweet(userId, tweetId)
     }
 
     override fun getNewsFeed(userId: UserId): Observable<List<TweetId>> {
-        println("TODO getNewsFeed - userId: $userId")
+        twitterRepository.getNewsFeed(userId)
         return Observable.just(emptyList())
     }
 
     override fun follow(followerId: FollowerId, followeeId: FolloweeId) {
-        println("TODO follow - followerId: $followerId, followeeId: $followeeId")
+        twitterRepository.follow(followerId, followeeId)
     }
 
     override fun unfollow(followerId: FollowerId, followeeId: FolloweeId) {
-        println("TODO unfollow - followerId: $followerId, followeeId: $followeeId")
+        twitterRepository.unfollow(followerId, followeeId)
     }
+}
+
+class TwitterRepository {
+    private val tweets = mutableSetOf<Tweet>()
+    private val follows = mutableSetOf<Pair<FollowerId, FolloweeId>>()
+
+    fun postTweet(userId: UserId, tweetId: TweetId) {
+        if (tweets.find { it.tweetId == tweetId } == null) {
+            tweets.add(Tweet(tweetId, userId))
+            logPostTweet(userId, tweetId)
+        } else {
+            println("Duplicate tweetId: $tweetId not posted")
+        }
+    }
+
+    fun getNewsFeed(userId: UserId): Observable<List<TweetId>> {
+        val userIds = listOf(userId) + follows.filter { follow -> follow.second == userId }.map { it.first }
+        val tenMostRecentTweets = tweets.filter { userIds.contains(it.userId) }.sortedByDescending { it.now }.take(10)
+
+        logGetNewsFeed(userIds, tenMostRecentTweets)
+        return Observable.just(emptyList())
+    }
+
+    fun follow(followerId: FollowerId, followeeId: FolloweeId) {
+        follows.add(Pair(followerId, followeeId))
+        logFollowUnfollow("FOLLOW", followerId, followeeId)
+    }
+
+    fun unfollow(followerId: FollowerId, followeeId: FolloweeId) {
+        follows.remove(Pair(followerId, followeeId))
+        logFollowUnfollow("UNFOLLOW", followerId, followeeId)
+    }
+
+    private fun logPostTweet(userId: UserId, tweetId: TweetId) {
+        print("POSTTWEET - userId: $userId, tweetId: $tweetId - [")
+        tweets.forEachIndexed { index, tweet ->
+            print("(${tweet.userId}, ${tweet.tweetId})${notEnd(index, tweets.size)}${end(index, tweets.size)}")
+        }
+    }
+
+    private fun logGetNewsFeed(userIds: List<UserId>, tenMostRecentTweets: List<Tweet>) {
+        println("getNewsFeed userIds: $userIds")
+        tenMostRecentTweets.forEach { println("tweetId: ${it.tweetId}, userIds: ${it.userId}, timeStamp: ${it.now}") }
+    }
+
+    private fun logFollowUnfollow(followUnfollow: String, followerId: Int, followeeId: Int) {
+        print("$followUnfollow - followerId: $followerId, followeeId: $followeeId - [")
+        follows.forEachIndexed { index, pair ->
+            print("(${pair.first}, ${pair.second})${notEnd(index, follows.size)}${end(index, follows.size)}")
+        }
+    }
+
+    private fun notEnd(index: Int, size: Int, string: String = ", ") = if (index < size - 1) string else ""
+
+    private fun end(index: Int, size: Int, string: String = "]\n") = if (index >= size - 1) string else ""
 }
