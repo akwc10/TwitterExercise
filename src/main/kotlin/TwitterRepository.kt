@@ -2,6 +2,8 @@ import io.reactivex.Observable
 import java.time.Instant
 
 class TwitterRepository {
+    //    TODO - Implement immutable
+//    TODO - How to emit whenever MutableSet<TweetId> changes?
     private val MAX_TWEETS = 10
     private val tweets = mutableSetOf<Tweet>()
     private val follows = mutableSetOf<Follow>()
@@ -15,16 +17,17 @@ class TwitterRepository {
         }
     }
 
-    fun getNewsFeed(userId: UserId): Observable<List<TweetId>> {
+    fun getNewsFeed(userId: UserId): Observable<List<TweetId>> = Observable.create {
         val userIdsOfFollowerAndFollowees =
-            listOf(userId) + follows.filter { follow -> follow.followeeId == userId }.map { it.followerId }
-        val tenMostRecentTweets =
-            tweets.filter { userIdsOfFollowerAndFollowees.contains(it.userId) }
-                .sortedByDescending { it.now }
+            listOf(userId) + follows.filter { follow -> follow.followerId == userId }
+                .map { follow -> follow.followeeId }
+        val tenMostRecentTweetIds =
+            tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
+                .sortedByDescending { tweet -> tweet.now }
                 .take(MAX_TWEETS)
+                .map { tweet -> tweet.tweetId }
 
-        logGetNewsFeed(userIdsOfFollowerAndFollowees, tenMostRecentTweets)
-        return Observable.just(emptyList())
+        it.onNext(tenMostRecentTweetIds)
     }
 
     fun follow(followerId: FollowerId, followeeId: FolloweeId) {

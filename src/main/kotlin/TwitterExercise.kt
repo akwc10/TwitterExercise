@@ -19,18 +19,12 @@ import io.reactivex.Observable
 
 class TwitterExercise : ITwitterExercise {
     private val twitterRepository = TwitterRepository()
-    private val tweetIdObservable = Observable.create<List<TweetId>> { emitter ->
-        emitter.onNext(emptyList())
-    }
 
     override fun postTweet(userId: UserId, tweetId: TweetId) {
         twitterRepository.postTweet(userId, tweetId)
     }
 
-    override fun getNewsFeed(userId: UserId): Observable<List<TweetId>> {
-        twitterRepository.getNewsFeed(userId)
-        return Observable.just(emptyList())
-    }
+    override fun getNewsFeed(userId: UserId): Observable<List<TweetId>> = twitterRepository.getNewsFeed(userId)
 
     override fun follow(followerId: FollowerId, followeeId: FolloweeId) {
         twitterRepository.follow(followerId, followeeId)

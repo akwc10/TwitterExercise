@@ -34,8 +34,11 @@ class TwitterExerciseTest {
     @Test
     fun `post tweets posted by the user`() {
         twitter.postTweet(1, 5)
+        Thread.sleep(10)
         twitter.postTweet(1, 6)
+        Thread.sleep(10)
         twitter.postTweet(1, 7)
+        Thread.sleep(10)
 
         val test = twitter.getNewsFeed(1).test()
         test.assertValue(listOf(7, 6, 5))
@@ -48,9 +51,7 @@ class TwitterExerciseTest {
     @Test
     fun `if nothing posted for that userId then emptyList`() {
         twitter.getNewsFeed(1).test().assertNoValues()
-
         twitter.postTweet(1, 5)
-
         twitter.getNewsFeed(2).test().assertValue(emptyList())
     }
 
@@ -74,7 +75,9 @@ class TwitterExerciseTest {
         val test2 = twitter.getNewsFeed(2).test()
 
         twitter.postTweet(1, 5)
+        Thread.sleep(10)
         twitter.postTweet(2, 6)
+        Thread.sleep(10)
 
         test1.assertValues(listOf(5), listOf(6, 5))
         test2.assertValues(listOf(5), listOf(6, 5))
