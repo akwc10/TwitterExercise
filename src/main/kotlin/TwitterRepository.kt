@@ -21,32 +21,34 @@ class TwitterRepository {
         }
     }
 
-    fun getNewsFeed(userId: UserId): Observable<List<TweetId>> = Observable.create {
-//        val userIdsOfFollowerAndFollowees =
-//            listOf(userId) + follows.filter { follow -> follow.followerId == userId }
-//                .map { follow -> follow.followeeId }
-//        val tenMostRecentTweetIds =
-//            tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
-//                .sortedByDescending { tweet -> tweet.now }
-//                .take(MAX_TWEETS)
-//                .map { tweet -> tweet.tweetId }
-
-        followsSubject.subscribe { follows ->
+    fun getNewsFeed(userId: UserId): Observable<List<TweetId>> =
+        Observable.combineLatest(followsSubject, tweetsSubject, { follows: Set<Follow>, tweets: Set<Tweet> ->
             val userIdsOfFollowerAndFollowees =
                 listOf(userId) + follows.filter { follow -> follow.followerId == userId }
                     .map { follow -> follow.followeeId }
             println("userIdsOfFollowerAndFollowees: $userIdsOfFollowerAndFollowees")
-            tweetsSubject.subscribe { tweets ->
-                val tenMostRecentTweetIds =
-                    tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
-                        .sortedByDescending { tweet -> tweet.now }
-                        .take(MAX_TWEETS)
-                        .map { tweet -> tweet.tweetId }
-                println("tenMostRecentTweetIds: $tenMostRecentTweetIds")
-                it.onNext(tenMostRecentTweetIds)
-            }
-        }
-    }
+//            println("tenMostRecentTweetIds: $tenMostRecentTweetIds")
+            tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
+                .sortedByDescending { tweet -> tweet.now }
+                .take(MAX_TWEETS)
+                .map { tweet -> tweet.tweetId }
+        })
+
+//        followsSubject.subscribe { follows ->
+//            val userIdsOfFollowerAndFollowees =
+//                listOf(userId) + follows.filter { follow -> follow.followerId == userId }
+//                    .map { follow -> follow.followeeId }
+//            println("userIdsOfFollowerAndFollowees: $userIdsOfFollowerAndFollowees")
+//            tweetsSubject.subscribe { tweets ->
+//                val tenMostRecentTweetIds =
+//                    tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
+//                        .sortedByDescending { tweet -> tweet.now }
+//                        .take(MAX_TWEETS)
+//                        .map { tweet -> tweet.tweetId }
+//                println("tenMostRecentTweetIds: $tenMostRecentTweetIds")
+//                it.onNext(tenMostRecentTweetIds)
+//            }
+//        }
 
     fun follow(followerId: FollowerId, followeeId: FolloweeId) {
         follows.add(Follow(followerId, followeeId))
