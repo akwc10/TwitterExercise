@@ -26,6 +26,8 @@ class TwitterExercise : ITwitterExercise {
 
     override fun getNewsFeed(userId: UserId): Observable<List<TweetId>> = twitterRepository.getNewsFeed(userId)
 
+    override fun getFollowees(followerId: FollowerId): Observable<Set<FolloweeId>> = Observable.just(emptySet())
+
     override fun follow(followerId: FollowerId, followeeId: FolloweeId) {
         twitterRepository.follow(followerId, followeeId)
     }

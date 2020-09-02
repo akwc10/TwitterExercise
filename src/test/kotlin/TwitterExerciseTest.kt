@@ -1,10 +1,9 @@
 import org.junit.Test
-import playground.twitter.TwitterExerciseSolution
 
 class TwitterExerciseTest {
 
-    private val twitter = TwitterExercise()
-//private val twitter = TwitterExerciseSolution()
+//    private val twitter = TwitterExercise()
+private val twitter = TwitterExerciseSolution()
 
     @Test
     fun `test stuff`() {
