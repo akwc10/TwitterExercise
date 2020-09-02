@@ -1,5 +1,7 @@
 import io.reactivex.Observable
 import io.reactivex.subjects.ReplaySubject
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 
 class TwitterRepository {
@@ -13,8 +15,11 @@ class TwitterRepository {
 
     fun postTweet(userId: UserId, tweetId: TweetId) {
         if (tweets.find { it.tweetId == tweetId } == null) {
-            tweets.add(Tweet(tweetId, userId))
-            tweetsSubject.onNext(tweets)
+            runBlocking {
+                tweets.add(Tweet(tweetId, userId))
+                tweetsSubject.onNext(tweets)
+                delay(10)
+            }
             logPostTweet(userId, tweetId)
         } else {
             println("Duplicate tweetId: $tweetId not posted")
@@ -33,22 +38,6 @@ class TwitterRepository {
                 .take(MAX_TWEETS)
                 .map { tweet -> tweet.tweetId }
         })
-
-//        followsSubject.subscribe { follows ->
-//            val userIdsOfFollowerAndFollowees =
-//                listOf(userId) + follows.filter { follow -> follow.followerId == userId }
-//                    .map { follow -> follow.followeeId }
-//            println("userIdsOfFollowerAndFollowees: $userIdsOfFollowerAndFollowees")
-//            tweetsSubject.subscribe { tweets ->
-//                val tenMostRecentTweetIds =
-//                    tweets.filter { tweet -> userIdsOfFollowerAndFollowees.contains(tweet.userId) }
-//                        .sortedByDescending { tweet -> tweet.now }
-//                        .take(MAX_TWEETS)
-//                        .map { tweet -> tweet.tweetId }
-//                println("tenMostRecentTweetIds: $tenMostRecentTweetIds")
-//                it.onNext(tenMostRecentTweetIds)
-//            }
-//        }
 
     fun follow(followerId: FollowerId, followeeId: FolloweeId) {
         follows.add(Follow(followerId, followeeId))
